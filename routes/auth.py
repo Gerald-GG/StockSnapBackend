@@ -2,16 +2,14 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError  # Import IntegrityError for database integrity violations
 import logging  # Import logging for logging errors
+from models import db, bcrypt
+from models.user import User  # Import the User model
 
 auth_routes = Blueprint('auth_routes', __name__)
 
 # User Registration Endpoint
 @auth_routes.route('/register', methods=['POST'])
 def register():
-    # Import db, bcrypt, and User model here to avoid circular import
-    from models import db, bcrypt
-    from models.user import User
-
     try:
         data = request.get_json()
         username = data.get('username')

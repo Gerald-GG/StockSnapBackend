@@ -1,10 +1,12 @@
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, send_from_directory
 from flask_restful import Resource
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import db  # Import the db object from models
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing functions
 import logging
 import os
+from werkzeug.utils import secure_filename
+from werkzeug.exceptions import BadRequest
 
 # Define the User model
 class User(db.Model):
@@ -12,7 +14,6 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
-    image_url = db.Column(db.String(200), nullable=True)
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}')"
@@ -96,7 +97,6 @@ class UserResource(Resource):
                     "id": user.id,
                     "username": user.username,
                     "email": user.email
-                    # Add more user information fields as needed
                 }, 200
             else:
                 return {"message": "User not found."}, 404
@@ -123,9 +123,7 @@ class UserResource(Resource):
             if image and allowed_file(image.filename):
                 filename = secure_filename(image.filename)
                 image.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                user.image_url = filename
-                db.session.commit()
-                return {"message": "Image uploaded successfully.", "image_url": filename}, 200
+                return {"message": "Image uploaded successfully."}, 200
             else:
                 return {"error": "Invalid image file."}, 400
         except BadRequest:
